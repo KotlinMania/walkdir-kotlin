@@ -67,6 +67,5 @@ Provenance gate: `ast_distance --deep tmp/walkdir/src rust src/commonMain/kotlin
 
 ## Scope discipline
 
-- More than ~5 files in a single change → stop and ask.
 - One Rust file → one Kotlin file. No exceptions.
 - Test files port too. Every `#[test]` becomes a `@Test`.
