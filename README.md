@@ -166,7 +166,7 @@ On my system, the performance of `walkdir`, `find` and `nftw` is comparable.
 
 ```kotlin
 dependencies {
-    implementation("io.github.kotlinmania:walkdir-kotlin:0.1.0-SNAPSHOT")
+    implementation("io.github.kotlinmania:walkdir-kotlin:0.1.0")
 }
 ```
 
