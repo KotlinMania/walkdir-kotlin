@@ -41,5 +41,21 @@ jobs:
             compileKotlinIosSimulatorArm64 \
             compileKotlinIosX64 \
             iosSimulatorArm64Test \
-            assemble${XCF_NAME}XCFramework \
+            "assemble${XCF_NAME}XCFramework" \
             --no-configuration-cache
+
+      # Native upload-artifact (GitHub-published) makes the test reports
+      # downloadable from the run summary page. `if: success() || failure()`
+      # ensures uploads even when tests fail. Combined with the per-test
+      # testLogging events in build.gradle.kts, the audit trail covers both
+      # raw-log streaming and post-run inspection.
+      - name: Upload test reports (iOS)
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-ios
+          path: |
+            build/reports/tests/
+            build/test-results/
+          retention-days: 7
+          if-no-files-found: warn
