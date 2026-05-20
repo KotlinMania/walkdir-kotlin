@@ -201,4 +201,203 @@ class WalkDirTest {
         assertTrue("followLinks=false" in s)
         assertTrue("contentsFirst=false" in s)
     }
+
+    @Test
+    fun emptyRootDir() {
+        val sys = InMemorySys(mapOf("r" to (DIR to emptyList())))
+        val entries = WalkDir.new("r").intoIter(sys).asSequence().toList()
+        assertEquals(1, entries.size)
+        val ent = entries[0].getOrThrow()
+        assertTrue(ent.fileType().isDir)
+        assertFalse(ent.pathIsSymlink())
+        assertEquals(0, ent.depth())
+        assertEquals("r", ent.path())
+        assertEquals("r", ent.fileName())
+    }
+
+    @Test
+    fun emptyFile() {
+        val sys = InMemorySys(mapOf("a" to (FILE to emptyList())))
+        val entries = WalkDir.new("a").intoIter(sys).asSequence().toList()
+        assertEquals(1, entries.size)
+        val ent = entries[0].getOrThrow()
+        assertTrue(ent.fileType().isFile)
+        assertFalse(ent.pathIsSymlink())
+        assertEquals(0, ent.depth())
+        assertEquals("a", ent.path())
+        assertEquals("a", ent.fileName())
+    }
+
+    @Test
+    fun oneDir() {
+        val sys = InMemorySys(mapOf(
+            "r" to (DIR to listOf("r/a")),
+            "r/a" to (DIR to emptyList()),
+        ))
+        val entries = WalkDir.new("r").sortByFileName().intoIter(sys).asSequence().toList()
+        assertEquals(2, entries.size)
+        val ent = entries[1].getOrThrow()
+        assertEquals("r/a", ent.path())
+        assertEquals(1, ent.depth())
+        assertEquals("a", ent.fileName())
+        assertTrue(ent.fileType().isDir)
+    }
+
+    @Test
+    fun oneFile() {
+        val sys = InMemorySys(mapOf(
+            "r" to (DIR to listOf("r/a")),
+            "r/a" to (FILE to emptyList()),
+        ))
+        val entries = WalkDir.new("r").sortByFileName().intoIter(sys).asSequence().toList()
+        assertEquals(2, entries.size)
+        val ent = entries[1].getOrThrow()
+        assertEquals("r/a", ent.path())
+        assertEquals(1, ent.depth())
+        assertEquals("a", ent.fileName())
+        assertTrue(ent.fileType().isFile)
+    }
+
+    @Test
+    fun oneDirOneFile() {
+        val sys = InMemorySys(mapOf(
+            "r" to (DIR to listOf("r/foo")),
+            "r/foo" to (DIR to listOf("r/foo/a")),
+            "r/foo/a" to (FILE to emptyList()),
+        ))
+        val paths = WalkDir.new("r").sortByFileName().intoIter(sys)
+            .asSequence().map { it.getOrThrow().path() }.toList()
+        assertEquals(listOf("r", "r/foo", "r/foo/a"), paths)
+    }
+
+    @Test
+    fun manyFiles() {
+        val sys = InMemorySys(mapOf(
+            "r" to (DIR to listOf("r/foo")),
+            "r/foo" to (DIR to listOf("r/foo/a", "r/foo/b", "r/foo/c")),
+            "r/foo/a" to (FILE to emptyList()),
+            "r/foo/b" to (FILE to emptyList()),
+            "r/foo/c" to (FILE to emptyList()),
+        ))
+        val paths = WalkDir.new("r").sortByFileName().intoIter(sys)
+            .asSequence().map { it.getOrThrow().path() }.toList()
+        assertEquals(listOf("r", "r/foo", "r/foo/a", "r/foo/b", "r/foo/c"), paths)
+    }
+
+    @Test
+    fun manyDirs() {
+        val sys = InMemorySys(mapOf(
+            "r" to (DIR to listOf("r/foo")),
+            "r/foo" to (DIR to listOf("r/foo/a", "r/foo/b", "r/foo/c")),
+            "r/foo/a" to (DIR to emptyList()),
+            "r/foo/b" to (DIR to emptyList()),
+            "r/foo/c" to (DIR to emptyList()),
+        ))
+        val paths = WalkDir.new("r").sortByFileName().intoIter(sys)
+            .asSequence().map { it.getOrThrow().path() }.toList()
+        assertEquals(listOf("r", "r/foo", "r/foo/a", "r/foo/b", "r/foo/c"), paths)
+    }
+
+    @Test
+    fun manyMixed() {
+        val sys = InMemorySys(mapOf(
+            "r" to (DIR to listOf("r/foo")),
+            "r/foo" to (DIR to listOf(
+                "r/foo/a", "r/foo/b", "r/foo/c", "r/foo/d", "r/foo/e", "r/foo/f",
+            )),
+            "r/foo/a" to (DIR to emptyList()),
+            "r/foo/b" to (FILE to emptyList()),
+            "r/foo/c" to (DIR to emptyList()),
+            "r/foo/d" to (FILE to emptyList()),
+            "r/foo/e" to (DIR to emptyList()),
+            "r/foo/f" to (FILE to emptyList()),
+        ))
+        val paths = WalkDir.new("r").sortByFileName().intoIter(sys)
+            .asSequence().map { it.getOrThrow().path() }.toList()
+        assertEquals(
+            listOf(
+                "r", "r/foo",
+                "r/foo/a", "r/foo/b", "r/foo/c",
+                "r/foo/d", "r/foo/e", "r/foo/f",
+            ),
+            paths,
+        )
+    }
+
+    @Test
+    fun nested() {
+        val chain = "a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z"
+        val parts = chain.split('/')
+        val tree = HashMap<String, Pair<FileType, List<String>>>()
+        tree["root"] = DIR to listOf("root/a")
+        var prefix = "root"
+        for ((idx, p) in parts.withIndex()) {
+            val full = "$prefix/$p"
+            val children = if (idx == parts.lastIndex) listOf("$full/A") else listOf("$full/${parts[idx + 1]}")
+            tree[full] = DIR to children
+            prefix = full
+        }
+        tree["$prefix/A"] = FILE to emptyList()
+
+        val paths = WalkDir.new("root").sortByFileName().intoIter(tree.toInMemory())
+            .asSequence().map { it.getOrThrow().path() }.toList()
+        val expected = buildList {
+            add("root")
+            var p = "root"
+            for (seg in parts) { p = "$p/$seg"; add(p) }
+            add("$p/A")
+        }
+        assertEquals(expected, paths)
+    }
+
+    @Test
+    fun nestedSmallMaxOpen() {
+        val chain = "a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v/w/x/y/z"
+        val parts = chain.split('/')
+        val tree = HashMap<String, Pair<FileType, List<String>>>()
+        tree["root"] = DIR to listOf("root/a")
+        var prefix = "root"
+        for ((idx, p) in parts.withIndex()) {
+            val full = "$prefix/$p"
+            val children = if (idx == parts.lastIndex) listOf("$full/A") else listOf("$full/${parts[idx + 1]}")
+            tree[full] = DIR to children
+            prefix = full
+        }
+        tree["$prefix/A"] = FILE to emptyList()
+
+        val paths = WalkDir.new("root").maxOpen(1).sortByFileName().intoIter(tree.toInMemory())
+            .asSequence().map { it.getOrThrow().path() }.toList()
+        val expected = buildList {
+            add("root")
+            var p = "root"
+            for (seg in parts) { p = "$p/$seg"; add(p) }
+            add("$p/A")
+        }
+        assertEquals(expected, paths)
+    }
+
+    @Test
+    fun siblings() {
+        val sys = InMemorySys(mapOf(
+            "r" to (DIR to listOf("r/bar", "r/foo")),
+            "r/bar" to (DIR to listOf("r/bar/a", "r/bar/b")),
+            "r/bar/a" to (FILE to emptyList()),
+            "r/bar/b" to (FILE to emptyList()),
+            "r/foo" to (DIR to listOf("r/foo/a", "r/foo/b")),
+            "r/foo/a" to (FILE to emptyList()),
+            "r/foo/b" to (FILE to emptyList()),
+        ))
+        val paths = WalkDir.new("r").sortByFileName().intoIter(sys)
+            .asSequence().map { it.getOrThrow().path() }.toList()
+        assertEquals(
+            listOf(
+                "r",
+                "r/bar", "r/bar/a", "r/bar/b",
+                "r/foo", "r/foo/a", "r/foo/b",
+            ),
+            paths,
+        )
+    }
 }
+
+private fun Map<String, Pair<FileType, List<String>>>.toInMemory(): Sys = InMemorySys(this)
