@@ -57,10 +57,18 @@ kotlin {
         binaries.framework { baseName = "Walkdir"; xcf.add(this) }
     }
     iosSimulatorArm64 {
-        binaries.framework { baseName = "Walkdir"; xcf.add(this) }
+        binaries.framework {
+            baseName = "Walkdir"
+            isStatic = true
+            xcf.add(this)
+        }
     }
     iosX64 {
-        binaries.framework { baseName = "Walkdir"; xcf.add(this) }
+        binaries.framework {
+            baseName = "Walkdir"
+            isStatic = true
+            xcf.add(this)
+        }
     }
 
     tvosArm64 {
