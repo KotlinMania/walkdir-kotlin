@@ -55,14 +55,16 @@ internal sealed class DirList : Iterator<Result<DirEntry>> {
         private fun advanceOne(src: Iterator<Result<RawDirEntry>>) {
             if (!src.hasNext()) return
             val raw = src.next()
-            val entry = raw.fold(
-                onSuccess = { rd -> DirEntry.fromRawEntry(depth + 1, rd) },
-                onFailure = { err ->
-                    val io = err as? IoError
-                        ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
-                    Result.failure<DirEntry>(Error.fromIo(depth + 1, io))
-                },
-            )
+            val entry =
+                raw.fold(
+                    onSuccess = { rd -> DirEntry.fromRawEntry(depth + 1, rd) },
+                    onFailure = { err ->
+                        val io =
+                            err as? IoError
+                                ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+                        Result.failure<DirEntry>(Error.fromIo(depth + 1, io))
+                    },
+                )
             cached.addLast(entry)
             pulledOne = true
         }
@@ -97,8 +99,9 @@ internal sealed class DirList : Iterator<Result<DirEntry>> {
         return Closed(drained)
     }
 
-    override fun toString(): String = when (this) {
-        is Opened -> "DirList.Opened(depth=$depth)"
-        is Closed -> "DirList.Closed(entries=${entries.size})"
-    }
+    override fun toString(): String =
+        when (this) {
+            is Opened -> "DirList.Opened(depth=$depth)"
+            is Closed -> "DirList.Closed(entries=${entries.size})"
+        }
 }

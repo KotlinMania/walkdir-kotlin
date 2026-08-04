@@ -156,10 +156,11 @@ class DirEntry private constructor(
     internal companion object {
         internal fun fromRawEntry(depth: Int, ent: RawDirEntry): Result<DirEntry> {
             val tyRes = ent.fileType()
-            val ty = tyRes.getOrElse { err ->
-                val io = err as? IoError ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
-                return Result.failure(Error.fromPath(depth, ent.path(), io))
-            }
+            val ty =
+                tyRes.getOrElse { err ->
+                    val io = err as? IoError ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+                    return Result.failure(Error.fromPath(depth, ent.path(), io))
+                }
             // On Windows the upstream eagerly calls `ent.metadata()` for both the
             // file-type workaround and to cache it on the DirEntry. The Kotlin
             // port keeps the metadata if the seam can answer it cheaply (the
@@ -186,10 +187,11 @@ class DirEntry private constructor(
             follow: Boolean,
         ): Result<DirEntry> {
             val mdRes = if (follow) sys.metadata(pb) else sys.symlinkMetadata(pb)
-            val md = mdRes.getOrElse { err ->
-                val io = err as? IoError ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
-                return Result.failure(Error.fromPath(depth, pb, io))
-            }
+            val md =
+                mdRes.getOrElse { err ->
+                    val io = err as? IoError ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+                    return Result.failure(Error.fromPath(depth, pb, io))
+                }
             return Result.success(
                 DirEntry(
                     path = pb,

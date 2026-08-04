@@ -28,7 +28,6 @@ class FilterEntry internal constructor(
     private val it: IntoIter,
     private val predicate: (DirEntry) -> Boolean,
 ) : Iterator<Result<DirEntry>> {
-
     private var pending: Result<DirEntry>? = null
     private var exhausted: Boolean = false
 
