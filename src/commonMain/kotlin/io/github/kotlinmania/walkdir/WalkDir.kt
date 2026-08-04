@@ -349,11 +349,12 @@ class WalkDir private constructor(
      * filesystem [sys] here rather than threading it through every method,
      * because there is no implicit ambient filesystem in `commonMain`.
      */
-    fun intoIter(sys: Sys): IntoIter = IntoIter(
-        opts = opts,
-        sys = sys,
-        start = root,
-    )
+    fun intoIter(sys: Sys): IntoIter =
+        IntoIter(
+            opts = opts,
+            sys = sys,
+            start = root,
+        )
 
     override fun toString(): String = "WalkDir(opts=$opts, root=$root)"
 
@@ -367,9 +368,10 @@ class WalkDir private constructor(
          * traversal. (A root `DirEntry` still obeys its documentation with
          * respect to symlinks and the `followLinks` setting.)
          */
-        fun new(root: String): WalkDir = WalkDir(
-            opts = WalkDirOptions(),
-            root = root,
-        )
+        fun new(root: String): WalkDir =
+            WalkDir(
+                opts = WalkDirOptions(),
+                root = root,
+            )
     }
 }

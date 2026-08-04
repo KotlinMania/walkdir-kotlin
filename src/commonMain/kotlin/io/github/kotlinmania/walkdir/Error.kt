@@ -28,10 +28,11 @@ class Error private constructor(
      * For example, if an error occurred while opening a directory handle, the
      * error will include the path passed to [Sys.readDir].
      */
-    fun path(): String? = when (val it = inner) {
-        is ErrorInner.Io -> it.path
-        is ErrorInner.Loop -> it.child
-    }
+    fun path(): String? =
+        when (val it = inner) {
+            is ErrorInner.Io -> it.path
+            is ErrorInner.Loop -> it.child
+        }
 
     /**
      * Returns the path at which a cycle was detected.
@@ -44,10 +45,11 @@ class Error private constructor(
      * To get the path to the child directory entry in the cycle, use the
      * [path] method.
      */
-    fun loopAncestor(): String? = when (val it = inner) {
-        is ErrorInner.Loop -> it.ancestor
-        else -> null
-    }
+    fun loopAncestor(): String? =
+        when (val it = inner) {
+            is ErrorInner.Loop -> it.ancestor
+            else -> null
+        }
 
     /**
      * Returns the depth at which this error occurred relative to the root.
@@ -98,10 +100,11 @@ class Error private constructor(
      * }
      * ```
      */
-    fun ioError(): IoError? = when (val it = inner) {
-        is ErrorInner.Io -> it.err
-        is ErrorInner.Loop -> null
-    }
+    fun ioError(): IoError? =
+        when (val it = inner) {
+            is ErrorInner.Io -> it.err
+            is ErrorInner.Loop -> null
+        }
 
     /**
      * Similar to [ioError] except consumes self to convert to the original
@@ -118,10 +121,11 @@ class Error private constructor(
      * [IoError].
      */
     fun toIoError(): IoError {
-        val kind = when (val it = inner) {
-            is ErrorInner.Io -> it.err.kind
-            is ErrorInner.Loop -> IoErrorKind.OTHER
-        }
+        val kind =
+            when (val it = inner) {
+                is ErrorInner.Io -> it.err.kind
+                is ErrorInner.Loop -> IoErrorKind.OTHER
+            }
         return IoError(kind, message ?: "", this)
     }
 
@@ -138,22 +142,34 @@ class Error private constructor(
         internal fun fromLoop(depth: Int, ancestor: String, child: String): Error =
             Error(depth, ErrorInner.Loop(ancestor = ancestor, child = child))
 
-        private fun buildMessage(inner: ErrorInner): String = when (inner) {
-            is ErrorInner.Io ->
-                if (inner.path == null) inner.err.message ?: ""
-                else "IO error for operation on ${inner.path}: ${inner.err.message ?: ""}"
-            is ErrorInner.Loop ->
-                "File system loop found: ${inner.child} points to an ancestor ${inner.ancestor}"
-        }
+        private fun buildMessage(inner: ErrorInner): String =
+            when (inner) {
+                is ErrorInner.Io ->
+                    if (inner.path == null) {
+                        inner.err.message ?: ""
+                    } else {
+                        "IO error for operation on ${inner.path}: ${inner.err.message ?: ""}"
+                    }
+                is ErrorInner.Loop ->
+                    "File system loop found: ${inner.child} points to an ancestor ${inner.ancestor}"
+            }
     }
 }
 
 private sealed class ErrorInner {
-    class Io(val path: String?, val err: IoError) : ErrorInner()
-    class Loop(val ancestor: String, val child: String) : ErrorInner()
+    class Io(
+        val path: String?,
+        val err: IoError,
+    ) : ErrorInner()
 
-    fun cause(): Throwable? = when (this) {
-        is Io -> err
-        is Loop -> null
-    }
+    class Loop(
+        val ancestor: String,
+        val child: String,
+    ) : ErrorInner()
+
+    fun cause(): Throwable? =
+        when (this) {
+            is Io -> err
+            is Loop -> null
+        }
 }

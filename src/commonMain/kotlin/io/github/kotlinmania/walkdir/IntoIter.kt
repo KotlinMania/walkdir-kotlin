@@ -31,7 +31,6 @@ class IntoIter internal constructor(
      */
     private var start: String?,
 ) : Iterator<Result<DirEntry>> {
-
     /**
      * A stack of open (up to max fd) or closed handles to directories. An
      * open handle is a plain [Sys.readDir] iterator while a closed handle is
@@ -118,14 +117,16 @@ class IntoIter internal constructor(
         if (s != null) {
             start = null
             if (opts.sameFileSystem) {
-                val devRes = deviceNum(sys, s).fold(
-                    onSuccess = { Result.success(it) },
-                    onFailure = { err ->
-                        val io = err as? IoError
-                            ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
-                        Result.failure(Error.fromPath(0, s, io))
-                    },
-                )
+                val devRes =
+                    deviceNum(sys, s).fold(
+                        onSuccess = { Result.success(it) },
+                        onFailure = { err ->
+                            val io =
+                                err as? IoError
+                                    ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+                            Result.failure(Error.fromPath(0, s, io))
+                        },
+                    )
                 val dev = devRes.getOrElse { return Result.failure(it) }
                 rootDevice = dev
             }
@@ -266,11 +267,13 @@ class IntoIter internal constructor(
             // itself as a symlink. When it's enabled, it should always report
             // itself as the target.
             val mdRes = sys.metadata(dent.path())
-            val md = mdRes.getOrElse { err ->
-                val io = err as? IoError
-                    ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
-                return Result.failure(Error.fromPath(dent.depth(), dent.path(), io))
-            }
+            val md =
+                mdRes.getOrElse { err ->
+                    val io =
+                        err as? IoError
+                            ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+                    return Result.failure(Error.fromPath(dent.depth(), dent.path(), io))
+                }
             if (md.fileType.isDir) {
                 push(dent).getOrElse { return Result.failure(it) }
             }
@@ -305,42 +308,48 @@ class IntoIter internal constructor(
         }
         // Open a handle to reading the directory's entries.
         val rdRes = sys.readDir(dent.path())
-        var list: DirList = rdRes.fold(
-            onSuccess = { iter ->
-                DirList.Opened(depth = depth, pendingError = null, it = iter)
-            },
-            onFailure = { err ->
-                val io = err as? IoError
-                    ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
-                DirList.Opened(
-                    depth = depth,
-                    pendingError = Error.fromPath(depth, dent.path(), io),
-                    it = null,
-                )
-            },
-        )
+        var list: DirList =
+            rdRes.fold(
+                onSuccess = { iter ->
+                    DirList.Opened(depth = depth, pendingError = null, it = iter)
+                },
+                onFailure = { err ->
+                    val io =
+                        err as? IoError
+                            ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+                    DirList.Opened(
+                        depth = depth,
+                        pendingError = Error.fromPath(depth, dent.path(), io),
+                        it = null,
+                    )
+                },
+            )
         val sorter = opts.sorter
         if (sorter != null) {
             val entries = ArrayList<Result<DirEntry>>()
             while (list.hasNext()) entries.add(list.next())
-            entries.sortWith(Comparator { a, b ->
-                val aOk = a.getOrNull()
-                val bOk = b.getOrNull()
-                when {
-                    aOk != null && bOk != null -> sorter.compare(aOk, bOk)
-                    aOk == null && bOk == null -> 0
-                    aOk != null && bOk == null -> 1
-                    else -> -1
-                }
-            })
+            entries.sortWith(
+                Comparator { a, b ->
+                    val aOk = a.getOrNull()
+                    val bOk = b.getOrNull()
+                    when {
+                        aOk != null && bOk != null -> sorter.compare(aOk, bOk)
+                        aOk == null && bOk == null -> 0
+                        aOk != null && bOk == null -> 1
+                        else -> -1
+                    }
+                },
+            )
             list = DirList.Closed(entries)
         }
         if (opts.followLinks) {
-            val ancestor = Ancestor.new(sys, dent).getOrElse { err ->
-                val io = err as? IoError
-                    ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
-                return Result.failure(Error.fromIo(depth, io))
-            }
+            val ancestor =
+                Ancestor.new(sys, dent).getOrElse { err ->
+                    val io =
+                        err as? IoError
+                            ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+                    return Result.failure(Error.fromIo(depth, io))
+                }
             stackPath.add(ancestor)
         }
         // We push this after stackPath since creating the Ancestor can fail.
@@ -371,8 +380,10 @@ class IntoIter internal constructor(
     }
 
     private fun follow(initial: DirEntry): Result<DirEntry> {
-        var dent = DirEntry.fromPath(sys, depth, initial.path(), true)
-            .getOrElse { return Result.failure(it) }
+        var dent =
+            DirEntry
+                .fromPath(sys, depth, initial.path(), true)
+                .getOrElse { return Result.failure(it) }
         // The only way a symlink can cause a loop is if it points to a
         // directory. Otherwise, it always points to a leaf and we can omit
         // any loop checks.
@@ -384,17 +395,21 @@ class IntoIter internal constructor(
 
     private fun checkLoop(child: String): Result<Unit> {
         val hchildRes = sys.handleFromPath(child)
-        val hchild = hchildRes.getOrElse { err ->
-            val io = err as? IoError
-                ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
-            return Result.failure(Error.fromIo(depth, io))
-        }
-        for (ancestor in stackPath.asReversed()) {
-            val isSame = ancestor.isSame(hchild).getOrElse { err ->
-                val io = err as? IoError
-                    ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+        val hchild =
+            hchildRes.getOrElse { err ->
+                val io =
+                    err as? IoError
+                        ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
                 return Result.failure(Error.fromIo(depth, io))
             }
+        for (ancestor in stackPath.asReversed()) {
+            val isSame =
+                ancestor.isSame(hchild).getOrElse { err ->
+                    val io =
+                        err as? IoError
+                            ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+                    return Result.failure(Error.fromIo(depth, io))
+                }
             if (isSame) {
                 return Result.failure(Error.fromLoop(depth, ancestor.path, child))
             }
@@ -404,11 +419,13 @@ class IntoIter internal constructor(
 
     private fun isSameFileSystem(dent: DirEntry): Result<Boolean> {
         val dentDeviceRes = sys.deviceNum(dent.path())
-        val dentDevice = dentDeviceRes.getOrElse { err ->
-            val io = err as? IoError
-                ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
-            return Result.failure(Error.fromEntry(dent, io))
-        }
+        val dentDevice =
+            dentDeviceRes.getOrElse { err ->
+                val io =
+                    err as? IoError
+                        ?: IoError(IoErrorKind.OTHER, err.message ?: "", err)
+                return Result.failure(Error.fromEntry(dent, io))
+            }
         val rd = rootDevice ?: error("BUG: called isSameFileSystem without root device")
         return Result.success(rd == dentDevice)
     }
@@ -416,4 +433,3 @@ class IntoIter internal constructor(
     private fun skippable(): Boolean =
         depth < opts.minDepth || depth > opts.maxDepth
 }
-
