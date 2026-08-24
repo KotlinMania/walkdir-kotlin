@@ -1,4 +1,4 @@
-// port-lint: source src/lib.rs
+// port-lint: source lib.rs
 package io.github.kotlinmania.walkdir
 
 import kotlin.math.min
@@ -261,7 +261,7 @@ class IntoIter internal constructor(
         ) {
             // As a special case, if we are processing a root entry, then we
             // always follow it even if it's a symlink and followLinks is
-            // false. We are careful to not let this change the semantics of
+            // false. We are careful not to allow this to change the semantics of
             // the DirEntry however. Namely, the DirEntry should still respect
             // the followLinks setting. When it's disabled, it should report
             // itself as a symlink. When it's enabled, it should always report

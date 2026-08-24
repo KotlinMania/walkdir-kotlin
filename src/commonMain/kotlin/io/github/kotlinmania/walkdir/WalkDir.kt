@@ -1,4 +1,4 @@
-// port-lint: source src/lib.rs
+// port-lint: source lib.rs
 package io.github.kotlinmania.walkdir
 
 /**
@@ -241,21 +241,6 @@ class WalkDir private constructor(
     }
 
     /**
-     * Set a function for sorting directory entries with a key extraction
-     * function.
-     *
-     * If a compare function is set, the resulting iterator will return all
-     * paths in sorted order. The compare function will be called to compare
-     * entries from the same directory.
-     *
-     * ```kotlin
-     * WalkDir.new("foo").sortByKey<String> { it.fileName() }
-     * ```
-     */
-    fun <K : Comparable<K>> sortByKey(extract: (DirEntry) -> K): WalkDir =
-        sortBy(Comparator { a, b -> extract(a).compareTo(extract(b)) })
-
-    /**
      * Sort directory entries by file name, to ensure a deterministic order.
      *
      * This is a convenience function for calling [sortBy].
@@ -375,3 +360,19 @@ class WalkDir private constructor(
             )
     }
 }
+
+/**
+ * Set a function for sorting directory entries with a key extraction
+ * function.
+ *
+ * If a compare function is set, the resulting iterator will return all
+ * paths in sorted order. The compare function will be called to compare
+ * entries from the same directory.
+ *
+ * ```kotlin
+ * WalkDir.new("foo").sortByKey<String> { it.fileName() }
+ * ```
+ */
+inline fun <reified K : Comparable<K>> WalkDir.sortByKey(crossinline extract: (DirEntry) -> K): WalkDir =
+    sortBy(Comparator { a, b -> extract(a).compareTo(extract(b)) })
+
