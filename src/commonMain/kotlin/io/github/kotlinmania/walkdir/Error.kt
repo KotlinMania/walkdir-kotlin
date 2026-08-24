@@ -1,4 +1,4 @@
-// port-lint: source src/error.rs
+// port-lint: source error.rs
 package io.github.kotlinmania.walkdir
 
 /**
@@ -67,9 +67,7 @@ class Error private constructor(
      * This might happen, for example, when the error was produced because a
      * cycle was found in the directory tree while following symbolic links.
      *
-     * This method returns a borrowed value that is bound to the lifetime of
-     * the [Error]. To obtain an owned value, the [intoIoError] can be used
-     * instead.
+     * To obtain an [IoError] value, [intoIoError] can be used.
      *
      * > This is the original [IoError] and is _not_ the same as
      * > [toIoError] which contains additional context about the error.

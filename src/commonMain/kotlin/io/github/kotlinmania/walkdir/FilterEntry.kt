@@ -1,4 +1,4 @@
-// port-lint: source src/lib.rs
+// port-lint: source lib.rs
 package io.github.kotlinmania.walkdir
 
 /**
@@ -144,7 +144,6 @@ class FilterEntry internal constructor(
 /**
  * Public alias for [DirEntry.fileType]`.isDir`, used by [FilterEntry] to
  * decide whether to call [IntoIter.skipCurrentDir] on a rejected entry.
- * Mirrors upstream's `DirEntry::is_dir`, which is `pub(crate)` and therefore
- * accessible from `filter_entry`'s body.
  */
 private fun DirEntry.isDirPublic(): Boolean = fileType().isDir
+

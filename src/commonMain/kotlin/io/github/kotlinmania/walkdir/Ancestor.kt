@@ -1,15 +1,13 @@
-// port-lint: source src/lib.rs
+// port-lint: source lib.rs
 package io.github.kotlinmania.walkdir
 
 /**
  * An ancestor is an item in the directory tree traversed by walkdir, and is
  * used to check for loops in the tree when traversing symlinks.
  *
- * The upstream Rust struct stores a cached `same_file::Handle` on Windows
+ * The struct stores a cached [Handle] on Windows
  * because opening a file handle there is comparatively expensive. The Kotlin
- * port mirrors that by caching a [Handle] (the [Sys] seam's stand-in for
- * `same_file::Handle`) on every target. The cost on Unix is one extra opened
- * handle per ancestor; the win on Windows is unchanged.
+ * port mirrors that by caching a [Handle] on every target.
  */
 internal class Ancestor(
     /** The path of this ancestor. */

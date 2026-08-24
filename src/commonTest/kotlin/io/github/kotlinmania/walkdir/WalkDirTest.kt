@@ -1,6 +1,4 @@
-// port-lint: ignore — Kotlin-only tests; upstream lives in tests/walk_dir.rs but
-// translates poorly without a real filesystem, so this exercise drives the port
-// against an in-memory [Sys] instead.
+// port-lint: tests tests/recursive.rs
 package io.github.kotlinmania.walkdir
 
 import kotlin.test.Test

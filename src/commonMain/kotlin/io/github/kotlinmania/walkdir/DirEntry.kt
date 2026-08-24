@@ -1,4 +1,4 @@
-// port-lint: source src/dent.rs
+// port-lint: source dent.rs
 package io.github.kotlinmania.walkdir
 
 /**
@@ -45,7 +45,7 @@ class DirEntry private constructor(
      * Windows because it comes for free while reading a directory. The Kotlin
      * port stores it on every target so [metadata] can answer without a
      * follow-up syscall when [followLink] is false; the field is `null` if the
-     * directory entry was constructed without metadata (the Unix `from_entry`
+     * directory entry was constructed without metadata (the Unix `fromEntry`
      * fast path in upstream).
      *
      * We use this to determine whether an entry is a directory or not on
