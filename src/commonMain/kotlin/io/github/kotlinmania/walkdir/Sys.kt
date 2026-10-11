@@ -1,4 +1,4 @@
-// port-lint: ignore — filesystem seam with no single Rust counterpart. Upstream
+// Filesystem seam with no single Rust counterpart. Upstream
 // `walkdir` calls `std::fs::{read_dir, metadata, symlink_metadata}` directly;
 // Kotlin Multiplatform `commonMain` has no filesystem, so this interface stands
 // in for those calls. Each KMP target supplies its own actual elsewhere; the

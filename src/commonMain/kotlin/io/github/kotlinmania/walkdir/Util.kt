@@ -13,4 +13,3 @@ package io.github.kotlinmania.walkdir
  */
 internal fun deviceNum(sys: Sys, path: String): Result<ULong> =
     sys.deviceNum(path)
-

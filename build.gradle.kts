@@ -667,6 +667,45 @@ rootProject.extensions.configure<NodeJsRootExtension>("kotlinNodeJs") {
     versions.kotlinWebHelpers.version = providers.gradleProperty("node.kotlinWebHelpers.version").getOrElse("3.1.0")
 }
 
+// Make kotlinUpgradeYarnLock and kotlinWasmUpgradeYarnLock dependencies in the build process
+// for KotlinJS and other JavaScript/WASM targets so that yarn.lock is always upgraded automatically.
+val jsTasksNeedingYarnLock =
+    setOf(
+        "compileKotlinJs",
+        "compileTestKotlinJs",
+        "jsProcessResources",
+        "jsTestProcessResources",
+        "jsNodeTest",
+        "jsBrowserTest",
+    )
+
+tasks
+    .matching { it.name in jsTasksNeedingYarnLock }
+    .configureEach {
+        dependsOn("kotlinUpgradeYarnLock")
+    }
+
+val wasmTasksNeedingYarnLock =
+    setOf(
+        "compileKotlinWasmJs",
+        "compileTestKotlinWasmJs",
+        "wasmJsProcessResources",
+        "wasmJsTestProcessResources",
+        "wasmJsNodeTest",
+        "wasmJsBrowserTest",
+        "compileKotlinWasmWasi",
+        "compileTestKotlinWasmWasi",
+        "wasmWasiProcessResources",
+        "wasmWasiTestProcessResources",
+        "wasmWasiNodeTest",
+    )
+
+tasks
+    .matching { it.name in wasmTasksNeedingYarnLock }
+    .configureEach {
+        dependsOn("kotlinWasmUpgradeYarnLock")
+    }
+
 // ============================================================================
 // Maven Central publishing
 // ============================================================================
@@ -729,11 +768,19 @@ tasks.register("hostTests") {
     dependsOn(
         "jvmTest",
         "macosArm64Test",
+        "kotlinUpgradeYarnLock",
         "jsNodeTest",
+        "kotlinWasmUpgradeYarnLock",
         "wasmJsNodeTest",
         "wasmWasiNodeTest",
         "testAndroidHostTest",
     )
+}
+
+tasks.register("test") {
+    group = "verification"
+    description = "Runs the required test suite and Swift Export parity test."
+    dependsOn("hostTests", "swiftExportSmokeTest")
 }
 
 // Swift Export smoke test — produces the SPM package via embedSwiftExportForXcode
@@ -748,12 +795,16 @@ tasks.register("swiftExportSmokeTest") {
 
     doLast {
         val execOperations = serviceOf<ExecOperations>()
-        val swiftBuildDir =
+        val swiftBuildFile =
             layout.buildDirectory
                 .dir("swift-test")
                 .get()
                 .asFile
-                .absolutePath
+        if (swiftBuildFile.exists()) {
+            swiftBuildFile.deleteRecursively()
+        }
+        swiftBuildFile.mkdirs()
+        val swiftBuildDir = swiftBuildFile.absolutePath
         execOperations
             .exec {
                 workingDir = projectDir
@@ -778,22 +829,32 @@ tasks.register("swiftExportSmokeTest") {
                 )
             }.assertNormalExitValue()
 
-        val generatedPackageSwift =
-            layout.buildDirectory
-                .file("SPMPackage/macosArm64/Debug/Package.swift")
-                .get()
-                .asFile
-        if (generatedPackageSwift.exists()) {
-            val text = generatedPackageSwift.readText()
-            if (!text.contains("platforms:")) {
-                generatedPackageSwift.writeText(
-                    text.replaceFirst(
-                        Regex("(name:\\s*\"[^\"]*\",)"),
-                        "\$1\n    platforms: [.macOS(.v14)],",
-                    ),
-                )
+        layout.buildDirectory
+            .dir("SPMPackage")
+            .orNull
+            ?.asFile
+            ?.takeIf { it.exists() }
+            ?.walkTopDown()
+            ?.filter { it.name == "Package.swift" }
+            ?.forEach { file ->
+                val text = file.readText()
+                if (text.contains("platforms:")) {
+                    file.writeText(
+                        text.replace(
+                            Regex("""platforms:\s*\[[^\]]*\]"""),
+                            """platforms: [.macOS(.v14)]""",
+                        ),
+                    )
+                } else {
+                    file.writeText(
+                        text.replaceFirst(
+                            Regex("""(let package = Package\s*\(\s*name:\s*"[^"]*",)"""),
+                            """$1
+    platforms: [.macOS(.v14)],""",
+                        ),
+                    )
+                }
             }
-        }
 
         execOperations
             .exec {
@@ -851,6 +912,8 @@ val fullTargetBuildTaskNames =
                 "assembleAndroidDeviceTest",
                 "jvmMainClasses",
                 "jvmTestClasses",
+                "kotlinUpgradeYarnLock",
+                "kotlinWasmUpgradeYarnLock",
                 "jsMainClasses",
                 "jsTestClasses",
                 "wasmJsMainClasses",

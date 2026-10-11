@@ -146,4 +146,3 @@ class FilterEntry internal constructor(
  * decide whether to call [IntoIter.skipCurrentDir] on a rejected entry.
  */
 private fun DirEntry.isDirPublic(): Boolean = fileType().isDir
-
