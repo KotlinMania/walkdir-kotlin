@@ -375,4 +375,3 @@ class WalkDir private constructor(
  */
 inline fun <reified K : Comparable<K>> WalkDir.sortByKey(crossinline extract: (DirEntry) -> K): WalkDir =
     sortBy(Comparator { a, b -> extract(a).compareTo(extract(b)) })
-
