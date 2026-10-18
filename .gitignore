@@ -23,6 +23,7 @@ tmp/
 port_status_report.md
 high_priority_ports.md
 ast_distance_*.txt
+deep_symbol_inventory.txt
 .cache/
 *.lock
 kotlin-js-store/*
@@ -68,3 +69,4 @@ DerivedData/
 *.xcodeproj/xcuserdata/
 node_modules/
 package-lock.json
+tools/ast_distance

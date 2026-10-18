@@ -1,6 +1,6 @@
 # port-lint Proposed Changes
 
-**Generated:** 2026-08-28
+**Generated:** 2026-10-17
 **Source:** tmp/walkdir/src
 **Target:** src/commonMain/kotlin/io/github/kotlinmania/walkdir
 

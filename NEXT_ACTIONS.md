@@ -5,13 +5,15 @@ Based on AST analysis, here are the concrete next steps.
 ## Summary
 
 - **Files Present:** 4/7 (57.1%)
-- **Function parity:** 47/127 matched (target 67) — 37.0%
+- **Function parity:** 52/143 matched (target 67) — 36.4%
 - **Class/type parity:** 9/16 matched (target 13) — 56.2%
-- **Combined symbol parity:** 56/143 matched (target 80) — 39.2%
-- **Average inline-code cosine:** 0.45 (function body across 4 matched files)
+- **Combined symbol parity:** 61/159 matched (target 80) — 38.4%
+- **Average inline-code cosine:** 0.12 (function body across 4 matched files)
 - **Average documentation cosine:** 0.47 (doc text across 4 matched files)
 - **Cheat-zeroed Files:** 0
-- **Critical Issues:** 3 files with <0.60 function similarity
+- **Critical Issues:** 4 files with <0.60 function similarity
+- **Needs Review:** 0 files with 0.60-0.84 function similarity
+- **Excellent:** 0 files with >=0.85 function similarity
 
 ## Priority 1: Fix Incomplete High-Dependency Files
 
@@ -30,9 +32,9 @@ Every matched file is listed below with function and type symbol parity.
 ### 1. error
 
 - **Target:** `walkdir.Error`
-- **Similarity:** 0.52
+- **Similarity:** 0.14
 - **Dependents:** 3
-- **Priority Score:** 3041604.8
+- **Priority Score:** 3041608.5
 - **Functions:** 10/14 matched (target 12)
 - **Missing functions:** `description`, `source`, `fmt`, `from`
 - **Types:** 2/2 matched (target 4)
@@ -41,33 +43,33 @@ Every matched file is listed below with function and type symbol parity.
 ### 2. dent
 
 - **Target:** `walkdir.DirEntry`
-- **Similarity:** 0.44
+- **Similarity:** 0.08
 - **Dependents:** 0
-- **Priority Score:** 41605.6
-- **Functions:** 11/14 matched (target 13)
-- **Missing functions:** `from_entry`, `clone`, `fmt`
+- **Priority Score:** 112309.2
+- **Functions:** 11/21 matched (target 13)
+- **Missing functions:** `metadata_internal`, `from_entry`, `from_entry`, `from_entry`, `from_path`, `from_path`, `clone`, `clone`, `clone`, `fmt`
 - **Types:** 1/2 matched (target 1)
 - **Missing types:** `DirEntryExt`
 
 ### 3. lib
 
 - **Target:** `walkdir.DirList`
-- **Similarity:** 0.68
+- **Similarity:** 0.23
 - **Dependents:** 0
-- **Priority Score:** 33403.2
-- **Functions:** 25/26 matched (target 41)
-- **Missing functions:** `fmt`
+- **Priority Score:** 54107.7
+- **Functions:** 30/33 matched (target 41)
+- **Missing functions:** `fmt`, `new`, `is_same`
 - **Types:** 6/8 matched
 - **Missing types:** `Result`, `Item`
 
 ### 4. util
 
 - **Target:** `walkdir.Util`
-- **Similarity:** 0.14
+- **Similarity:** 0.01
 - **Dependents:** 0
-- **Priority Score:** 108.6
-- **Functions:** 1/1 matched
-- **Missing functions:** _none_
+- **Priority Score:** 20309.9
+- **Functions:** 1/3 matched (target 1)
+- **Missing functions:** `device_num`, `device_num`
 - **Types:** 0/0 matched
 - **Missing types:** _none_
 
