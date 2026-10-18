@@ -127,7 +127,26 @@ class Error private constructor(
         return IoError(kind, message ?: "", this)
     }
 
+    /**
+     * Returns a description of this error.
+     */
+    fun description(): String =
+        when (val it = inner) {
+            is ErrorInner.Io -> it.err.message ?: ""
+            is ErrorInner.Loop -> "file system loop found"
+        }
+
+    /**
+     * Returns the lower-level source of this error, if any.
+     */
+    fun source(): Throwable? = inner.cause()
+
     internal companion object {
+        /**
+         * Converts an [Error] to an [IoError].
+         */
+        fun from(walkErr: Error): IoError = walkErr.toIoError()
+
         internal fun fromPath(depth: Int, pb: String, err: IoError): Error =
             Error(depth, ErrorInner.Io(path = pb, err = err))
 

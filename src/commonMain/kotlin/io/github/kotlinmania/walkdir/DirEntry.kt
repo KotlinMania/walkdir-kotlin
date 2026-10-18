@@ -39,7 +39,7 @@ class DirEntry private constructor(
     /** The depth at which this entry was generated relative to the root. */
     private val depth: Int,
     /** The underlying inode number (Unix only; `null` elsewhere). */
-    val ino: ULong?,
+    private val ino: ULong?,
     /**
      * The underlying metadata snapshot taken at entry creation, retained on
      * Windows because it comes for free while reading a directory. The Kotlin
@@ -53,7 +53,25 @@ class DirEntry private constructor(
      * https://github.com/rust-lang/rust/issues/46484
      */
     private val cachedMetadata: Metadata?,
-) {
+) : DirEntryExt {
+    /**
+     * Returns the underlying inode number on Unix, or null on other platforms.
+     */
+    override fun ino(): ULong? = ino
+
+    /**
+     * Returns a copy of this directory entry.
+     */
+    fun clone(): DirEntry =
+        DirEntry(
+            path = path,
+            ty = ty,
+            followLink = followLink,
+            depth = depth,
+            ino = ino,
+            cachedMetadata = cachedMetadata,
+        )
+
     /**
      * The full path that this entry represents.
      *
@@ -180,6 +198,9 @@ class DirEntry private constructor(
             )
         }
 
+        internal fun fromEntry(depth: Int, ent: RawDirEntry): Result<DirEntry> =
+            fromRawEntry(depth, ent)
+
         internal fun fromPath(
             sys: Sys,
             depth: Int,
@@ -207,9 +228,15 @@ class DirEntry private constructor(
 }
 
 /**
- * Unix-specific accessor for [DirEntry.ino], mirroring the upstream Rust
- * `DirEntryExt::ino` method shape so callers ported from Rust that wrote
- * `entry.ino()` can keep the call. On non-Unix targets the [DirEntry.ino]
- * property is `null`, so this returns `null` rather than panicking.
+ * Unix-specific extension interface for `walkdir::DirEntry`.
+ *
+ * Provides access to the underlying `d_ino` field in the contained directory
+ * entry structure. On non-Unix platforms, [ino] returns `null`.
  */
-fun DirEntry.ino(): ULong? = ino
+interface DirEntryExt {
+    /**
+     * Returns the underlying `d_ino` field in the contained directory entry,
+     * or `null` if not supported on this platform.
+     */
+    fun ino(): ULong?
+}
